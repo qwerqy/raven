@@ -10,7 +10,7 @@ export const processPayment = async (
   const order: string = event.Records[0].Sns.Message;
   // order returns "order-{ORDER ID}}"
 
-  const orderId = order.split("-")[1];
+  const orderId = order.split("=")[1];
   const paymentStatusArray = ["confirmed", "declined"];
 
   const paymentStatus =
@@ -21,7 +21,7 @@ export const processPayment = async (
     Key: {
       id: orderId,
     },
-    UpdateExpression: "set status = :s",
+    UpdateExpression: "set orderStatus = :s",
     ExpressionAttributeValues: {
       ":s": paymentStatus,
     },

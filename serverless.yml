@@ -8,7 +8,7 @@ provider:
   region: ap-southeast-1
   environment:
     DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
-    AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
+    AWS_ACCOUNT_ID: ""
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -18,11 +18,14 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-        - sns:Publish,
+      Resource:
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+    - Effect: Allow
+      Action:
+        - sns:Publish
         - sns:Subscribe
       Resource:
         - "arn:aws:sns:${opt:region, self:provider.region}:*:processPayment"
-        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
 functions:
   createOrder:
     handler: dist/order.create

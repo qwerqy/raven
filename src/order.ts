@@ -7,7 +7,7 @@ const sns = new SNS();
 
 export const create = async (event, context, callback) => {
   const timestamp = new Date().getTime();
-  const { name, quantity, status = "created" } = JSON.parse(event.body);
+  const { name, quantity, orderStatus = "created" } = JSON.parse(event.body);
 
   const orderId = uuid.v4();
 
@@ -23,7 +23,7 @@ export const create = async (event, context, callback) => {
    * data : {
    *  name: String;
    *  quantity: number;
-   *  status: String;
+   *  orderStatus: String;
    * }
    */
   const params = {
@@ -32,7 +32,7 @@ export const create = async (event, context, callback) => {
       id: orderId,
       name,
       quantity,
-      status,
+      orderStatus,
       createdAt: timestamp,
       updatedAt: timestamp,
     },
@@ -46,8 +46,8 @@ export const create = async (event, context, callback) => {
     };
 
     const payload = {
-      Message: `order-${orderId}`,
-      TopicArn: `arn:aws:sns:ap-southeast-1::processPayment`,
+      Message: `order=${orderId}`,
+      TopicArn: `arn:aws:sns:ap-southeast-1:${process.env.AWS_ACCOUNT_ID}:processPayment`,
     };
 
     // Send payload to queue for processPayment PubSub
@@ -82,7 +82,7 @@ export const cancel = async (event: any, context, callback) => {
     Key: {
       id: id,
     },
-    UpdateExpression: "set status = :s",
+    UpdateExpression: "set orderStatus = :s",
     ExpressionAttributeValues: {
       ":s": "cancelled",
     },

@@ -4,6 +4,8 @@
 
 This project showcases the ability to how it is possible to create an Order Management System by taking advantage of the AWS Cloud Platform using the Serverless framework.
 
+When an order is created, it will be created in the DB, and then publish a message to a subscriber that will run the `processPayment` function via AWS SNS
+
 ### Stack
 
 - Typescript NodeJS
@@ -11,6 +13,7 @@ This project showcases the ability to how it is possible to create an Order Mana
   - AWS Lambda
   - AWS API Gateway
   - AWS DynamoDB
+  - AWS SNS
 
 ### Setup
 
