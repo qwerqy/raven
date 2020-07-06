@@ -1,3 +1,4 @@
+import { bodyValidator } from "./utils";
 import { DynamoDB, SNS } from "aws-sdk";
 import * as uuid from "uuid";
 
@@ -10,17 +11,14 @@ export const create = async (event, context, callback) => {
 
   const orderId = uuid.v4();
 
-  if (!name) {
-    console.error("Validation failed, name is not found");
-    callback(new Error("Name is not found"), null);
-    return;
-  }
+  bodyValidator({ name, quantity }).map((key) => {
+    if (key) {
+      console.error(`Validation failed, ${key} is not found`);
+      callback(new Error(`${key} is not found`), null);
+      return;
+    }
+  });
 
-  if (!quantity) {
-    console.error("Validation failed, quantity is not found");
-    callback(new Error("Quantity is not found"), null);
-    return;
-  }
   /**
    * data : {
    *  name: String;
@@ -42,10 +40,9 @@ export const create = async (event, context, callback) => {
 
   // Insert item into dynamoDB
   try {
-    const result = await dynamoDb.put(params).promise();
+    await dynamoDb.put(params).promise();
     const response = {
       statusCode: 200,
-      body: JSON.stringify(result),
     };
 
     const payload = {
@@ -72,11 +69,13 @@ export const create = async (event, context, callback) => {
 export const cancel = async (event: any, context, callback) => {
   const { id } = JSON.parse(event.body);
 
-  if (!id) {
-    console.error("Validation failed, id is not found");
-    callback(new Error("id is not found"), null);
-    return;
-  }
+  bodyValidator({ id }).map((key) => {
+    if (key) {
+      console.error(`Validation failed, ${key} is not found`);
+      callback(new Error(`${key} is not found`), null);
+      return;
+    }
+  });
 
   const params = {
     TableName: process.env.DYNAMODB_TABLE || "raven-dev",
@@ -107,11 +106,13 @@ export const cancel = async (event: any, context, callback) => {
 export const status = async (event: any, context: any, callback: any) => {
   const { id } = JSON.parse(event.body);
 
-  if (!id) {
-    console.error("Validation failed, id is not found");
-    callback(new Error("id is not found"), null);
-    return;
-  }
+  bodyValidator({ id }).map((key) => {
+    if (key) {
+      console.error(`Validation failed, ${key} is not found`);
+      callback(new Error(`${key} is not found`), null);
+      return;
+    }
+  });
 
   const params = {
     TableName: process.env.DYNAMODB_TABLE || "raven-dev",
