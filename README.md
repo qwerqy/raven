@@ -25,6 +25,8 @@ Then create an account on serverless or sign in to an existing account
 
 `$ serverless login`
 
+Register AWS profile via serverless.
+
 Install dependencies
 
 `$ npm i`
@@ -34,6 +36,12 @@ Install dependencies
 To transpile Typescript
 
 `$ npm run build`
+
+### Environment Variables
+
+```
+AWS_ACCOUNT_ID
+```
 
 ### Testing
 
