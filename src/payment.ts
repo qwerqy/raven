@@ -1,14 +1,9 @@
 import { DynamoDB } from "aws-sdk";
 
-const dynamoDb = new DynamoDB.DocumentClient();
-
-export const processPayment = async (
-  event: any,
-  context: any,
-  callback: any
-) => {
+export const processPayment = async (event: any) => {
+  const dynamoDb = new DynamoDB.DocumentClient();
   const order: string = event.Records[0].Sns.Message;
-  // order returns "order-{ORDER ID}}"
+  // order returns "order={ORDER ID}}"
 
   const orderId = order.split("=")[1];
   const paymentStatusArray = ["confirmed", "declined"];
@@ -30,14 +25,17 @@ export const processPayment = async (
 
   try {
     const result = await dynamoDb.update(params).promise();
-    const response = {
+    return {
       statusCode: 200,
       body: JSON.stringify(result),
     };
-    callback(null, response);
   } catch (err) {
     console.error(err);
-    callback(new Error("Couldn't process order payment."));
-    return;
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: "Couldn't process order payment.",
+      }),
+    };
   }
 };

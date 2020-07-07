@@ -1,8 +1,6 @@
-export const bodyValidator = (data: { [key: string]: any }): any[] => {
-  return Object.entries(data).map(([key, value]) => {
-    if (!value) {
-      return key;
-    }
-    return null;
-  });
+export const bodyValidator = (body: { [key: string]: any }): boolean => {
+  return !(
+    !body ||
+    (Object.keys(body).length === 0 && body.constructor === Object)
+  );
 };

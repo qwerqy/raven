@@ -2,22 +2,40 @@ import { bodyValidator } from "./utils";
 import { DynamoDB, SNS } from "aws-sdk";
 import * as uuid from "uuid";
 
-const dynamoDb = new DynamoDB.DocumentClient();
-const sns = new SNS();
-
-export const create = async (event, context, callback) => {
+export const create = async (event) => {
+  const dynamoDb = new DynamoDB.DocumentClient();
+  const sns = new SNS();
   const timestamp = new Date().getTime();
+
+  if (!bodyValidator(event.body)) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: `Body is not found`,
+      }),
+    };
+  }
   const { name, quantity, orderStatus = "created" } = JSON.parse(event.body);
 
-  const orderId = uuid.v4();
+  if (!name) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: `name is not found`,
+      }),
+    };
+  }
 
-  bodyValidator({ name, quantity }).map((key) => {
-    if (key) {
-      console.error(`Validation failed, ${key} is not found`);
-      callback(new Error(`${key} is not found`), null);
-      return;
-    }
-  });
+  if (!quantity) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: `quantity is not found`,
+      }),
+    };
+  }
+
+  const orderId = uuid.v4();
 
   /**
    * data : {
@@ -41,9 +59,6 @@ export const create = async (event, context, callback) => {
   // Insert item into dynamoDB
   try {
     await dynamoDb.put(params).promise();
-    const response = {
-      statusCode: 200,
-    };
 
     const payload = {
       Message: `order=${orderId}`,
@@ -58,24 +73,45 @@ export const create = async (event, context, callback) => {
         throw err;
       });
 
-    callback(null, response);
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        message: "Successfully created order and payment process",
+      }),
+    };
   } catch (err) {
     console.error(err);
-    callback(new Error("Couldn't create order."));
-    return;
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: "Couldn't create order.",
+      }),
+    };
   }
 };
 
-export const cancel = async (event: any, context, callback) => {
+export const cancel = async (event) => {
+  const dynamoDb = new DynamoDB.DocumentClient();
+
+  if (!bodyValidator(event.body)) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: `Body is not found`,
+      }),
+    };
+  }
+
   const { id } = JSON.parse(event.body);
 
-  bodyValidator({ id }).map((key) => {
-    if (key) {
-      console.error(`Validation failed, ${key} is not found`);
-      callback(new Error(`${key} is not found`), null);
-      return;
-    }
-  });
+  if (!id) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: `id is not found`,
+      }),
+    };
+  }
 
   const params = {
     TableName: process.env.DYNAMODB_TABLE || "raven-dev",
@@ -91,28 +127,43 @@ export const cancel = async (event: any, context, callback) => {
 
   try {
     const result = await dynamoDb.update(params).promise();
-    const response = {
+    return {
       statusCode: 200,
-      body: JSON.stringify(result),
+      body: JSON.stringify({ message: "Successfully cancelled order." }),
     };
-    callback(null, response);
   } catch (err) {
     console.error(err);
-    callback(new Error("Couldn't cancel order."));
-    return;
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: "Couldn't cancel order.",
+      }),
+    };
   }
 };
 
-export const status = async (event: any, context: any, callback: any) => {
+export const status = async (event) => {
+  const dynamoDb = new DynamoDB.DocumentClient();
+
+  if (!bodyValidator(event.body)) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: `Body is not found`,
+      }),
+    };
+  }
+
   const { id } = JSON.parse(event.body);
 
-  bodyValidator({ id }).map((key) => {
-    if (key) {
-      console.error(`Validation failed, ${key} is not found`);
-      callback(new Error(`${key} is not found`), null);
-      return;
-    }
-  });
+  if (!id) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: `id is not found`,
+      }),
+    };
+  }
 
   const params = {
     TableName: process.env.DYNAMODB_TABLE || "raven-dev",
@@ -123,14 +174,17 @@ export const status = async (event: any, context: any, callback: any) => {
 
   try {
     const result = await dynamoDb.get(params).promise();
-    const response = {
+    return {
       statusCode: 200,
       body: JSON.stringify(result),
     };
-    callback(null, response);
   } catch (err) {
     console.error(err);
-    callback(new Error("Couldn't get order."));
-    return;
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: "Couldn't get order status.",
+      }),
+    };
   }
 };

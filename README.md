@@ -36,3 +36,9 @@ To transpile Typescript
 `$ npm run build`
 
 ### Testing
+
+Run unit & integration tests
+
+`$ npm run test`
+
+Tests are run before `sls deploy` when invoke by `npm run deploy` script
