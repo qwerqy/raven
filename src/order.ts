@@ -191,7 +191,7 @@ export const status = async (event) => {
 
 export const deliver = async (event: any) => {
   const dynamoDb = new DynamoDB.DocumentClient();
-  const orderId = event.Records[0].dynamodb.Keys.Id.S;
+  const orderId = event.Records[0].dynamodb.Keys.id.S;
   const orderStatus = event.Records[0].dynamodb.NewImage.orderStatus.S;
 
   if (orderStatus === "confirmed") {

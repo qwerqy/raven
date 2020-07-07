@@ -5,7 +5,7 @@
       "eventVersion": "1.0",
       "dynamodb": {
         "Keys": {
-          "Id": {
+          "id": {
             "S": "101"
           }
         },
