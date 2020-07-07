@@ -3,6 +3,8 @@ import * as eventFullBodyStub from "./stubs/eventFullBody.json";
 import * as eventMissingQuantityBodyStub from "./stubs/eventMissingQuantityBody.json";
 import * as eventNoBodyStub from "./stubs/eventNoBody.json";
 import * as eventWithIdBodyStub from "./stubs/eventWithIdBody.json";
+import * as eventDynamoDBConfirmedStream from "./stubs/eventDynamoDBConfirmedStream.json";
+import * as eventDynamoDBDeclinedStream from "./stubs/eventDynamoDBDeclinedStream.json";
 
 import * as order from "../src/order";
 import { GetItemInput } from "aws-sdk/clients/dynamodb";
@@ -171,6 +173,48 @@ describe(`order.status`, () => {
       statusCode: 400,
       body: JSON.stringify({
         message: "Body is not found",
+      }),
+    });
+  });
+});
+
+describe(`order.delivery`, () => {
+  beforeAll(() => {
+    AWS.mock(
+      "DynamoDB.DocumentClient",
+      "update",
+      (params: GetItemInput, callback: Function) => {
+        callback(null, {});
+      }
+    );
+  });
+
+  afterAll(() => {
+    AWS.restore("DynamoDB.DocumentClient");
+  });
+
+  it(`Deliver order when order status is confirmed`, async () => {
+    const event = eventDynamoDBConfirmedStream;
+    const context = {};
+
+    const result = await order.deliver(event);
+    expect(result).toEqual({
+      statusCode: 200,
+      body: JSON.stringify({
+        message: "Successfully delivered order.",
+      }),
+    });
+  });
+
+  it(`Returns 200 if order status is declined`, async () => {
+    const event = eventDynamoDBDeclinedStream;
+    const context = {};
+
+    const result = await order.deliver(event);
+    expect(result).toEqual({
+      statusCode: 200,
+      body: JSON.stringify({
+        message: "Payment for order declined. Skipping delivery.",
       }),
     });
   });

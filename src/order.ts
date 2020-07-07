@@ -1,4 +1,4 @@
-import { bodyValidator } from "./utils";
+import { bodyValidator, delay } from "./utils";
 import { DynamoDB, SNS } from "aws-sdk";
 import * as uuid from "uuid";
 
@@ -187,4 +187,47 @@ export const status = async (event) => {
       }),
     };
   }
+};
+
+export const deliver = async (event: any) => {
+  const dynamoDb = new DynamoDB.DocumentClient();
+  const orderId = event.Records[0].dynamodb.Keys.Id.S;
+  const orderStatus = event.Records[0].dynamodb.NewImage.orderStatus.S;
+
+  if (orderStatus === "confirmed") {
+    const params = {
+      TableName: process.env.DYNAMODB_TABLE || "raven-dev",
+      Key: {
+        id: orderId,
+      },
+      UpdateExpression: "set orderStatus = :s",
+      ExpressionAttributeValues: {
+        ":s": "delivered",
+      },
+      ReturnValues: "UPDATED_NEW",
+    };
+
+    try {
+      delay(5000);
+      await dynamoDb.update(params).promise();
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ message: "Successfully delivered order." }),
+      };
+    } catch (err) {
+      console.error(err);
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          message: "Couldn't process order delivery.",
+        }),
+      };
+    }
+  }
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      message: "Payment for order declined. Skipping delivery.",
+    }),
+  };
 };
