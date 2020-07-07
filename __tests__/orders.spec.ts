@@ -3,7 +3,8 @@ import * as eventFullBodyStub from "./stubs/eventFullBody.json";
 import * as eventMissingQuantityBodyStub from "./stubs/eventMissingQuantityBody.json";
 import * as eventNoBodyStub from "./stubs/eventNoBody.json";
 import * as eventWithIdBodyStub from "./stubs/eventWithIdBody.json";
-import * as eventDynamoDBConfirmedStream from "./stubs/eventDynamoDBConfirmedStream.json";
+import * as eventSNSProcessDeliveryConfirmedStub from "./stubs/eventSNSProcessDeliveryConfirmed.json";
+import * as eventSNSProcessDeliveryDeclinedStub from "./stubs/eventSNSProcessDeliveryDeclined.json";
 import * as eventDynamoDBDeclinedStream from "./stubs/eventDynamoDBDeclinedStream.json";
 
 import * as order from "../src/order";
@@ -194,7 +195,7 @@ describe(`order.delivery`, () => {
   });
 
   it(`Deliver order when order status is confirmed`, async () => {
-    const event = eventDynamoDBConfirmedStream;
+    const event = eventSNSProcessDeliveryConfirmedStub;
     const context = {};
 
     const result = await order.deliver(event);
@@ -207,7 +208,7 @@ describe(`order.delivery`, () => {
   });
 
   it(`Returns 200 if order status is declined`, async () => {
-    const event = eventDynamoDBDeclinedStream;
+    const event = eventSNSProcessDeliveryDeclinedStub;
     const context = {};
 
     const result = await order.deliver(event);

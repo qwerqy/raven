@@ -60,6 +60,8 @@ export const create = async (event) => {
   try {
     await dynamoDb.put(params).promise();
 
+    console.log(`Order ${orderId} created. Proceeding to process payment`);
+
     const payload = {
       Message: `order=${orderId}`,
       TopicArn: `arn:aws:sns:ap-southeast-1:${process.env.AWS_ACCOUNT_ID}:processPayment`,
@@ -191,10 +193,12 @@ export const status = async (event) => {
 
 export const deliver = async (event: any) => {
   const dynamoDb = new DynamoDB.DocumentClient();
-  const orderId = event.Records[0].dynamodb.Keys.id.S;
-  const orderStatus = event.Records[0].dynamodb.NewImage.orderStatus.S;
+  const order: string = event.Records[0].Sns.Message;
+  const orderId = order.split("=")[2];
+  const orderStatus = order.split("=")[1];
 
   if (orderStatus === "confirmed") {
+    console.log(`Order ${orderId} payment confirm, proceed to deliver.`);
     const params = {
       TableName: process.env.DYNAMODB_TABLE || "raven-dev",
       Key: {

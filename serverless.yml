@@ -30,6 +30,12 @@ provider:
       Action:
         - sns:Publish
         - sns:Subscribe
+      Resource:
+        - "arn:aws:sns:${opt:region, self:provider.region}:*:processDelivery"
+    - Effect: Allow
+      Action:
+        - sns:Publish
+        - sns:Subscribe
         - dynamodb:DescribeStream
         - dynamodb:GetRecords
         - dynamodb:GetShardIterator
@@ -65,12 +71,7 @@ functions:
   deliverOrder:
     handler: dist/order.deliver
     events:
-      - stream:
-          arn: arn:aws:dynamodb:${opt:region, self:provider.region}:543436861527:table/${self:provider.environment.DYNAMODB_TABLE}/stream/2020-07-07T08:44:05.725
-          batchSize: 100
-          startingPosition: TRIM_HORIZON
-          maximumRetryAttempts: 10
-          enabled: true
+      - sns: processDelivery
 resources:
   Resources:
     OrdersDynamoDbTable:
